@@ -21,11 +21,76 @@ var canvas;  // the canvas on which we will draw.
 
 var frameNumber = 0;  // frame number for the animation
 
-var sphere, cubeModel, cylinder, cone, torus, teapot;  // model data for six objects.
+var sphere, cubeModel, cylinder, cone, torus, teapot, pyramid;  // model data for six objects.
+
+function drawPyramid() {
+    let vertices = [];
+    let normals = [];
+    let texCoords = [];
+    let indices = [];
+
+    let numSides = 12;
+    let radius = 5;
+    let height = 7.5;
+
+    for (let i = 0; i < numSides; i++) {
+        let angle = 2 * Math.PI * i / numSides;
+        let x = radius * Math.cos(angle);
+        let z = radius * Math.sin(angle);
+        vertices.push(x, -2, z);
+    }
+    vertices.push(0, height, 0); 
+
+    for (let i = 0; i < numSides; i++) {
+
+        let v1x = vertices[3 * i];
+        let v1y = vertices[3 * i + 1];
+        let v1z = vertices[3 * i + 2];
+
+        let v2x = vertices[3 * ((i + 1) % numSides)];
+        let v2y = vertices[3 * ((i + 1) % numSides) + 1];
+        let v2z = vertices[3 * ((i + 1) % numSides) + 2];
+
+        let normal = [
+            v1z * v2y - v1y * v2z,
+            v1x * v2z - v1z * v2x,
+            v1y * v2x - v1x * v2y
+        ];
+
+        let length = Math.sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+        normal = [normal[0] / length, normal[1] / length, normal[2] / length];
+
+        for (let j = 0; j < 3; j++) {
+            normals.push(normal[0], normal[1], normal[2]);
+        }
+
+        normals.push(0, 1, 0);
+    }
+
+    texCoords.push(0.5, 0.5);
+    for (let i = 0; i < numSides; i++) {
+        texCoords.push(0.5 + 0.5 * Math.cos(2 * Math.PI * i / numSides), 0.5 + 0.5 * Math.sin(2 * Math.PI * i / numSides)); // Base vertices
+    }
+    texCoords.push(0.5, 0.5);
+
+    for (let i = 0; i < numSides; i++) {
+        indices.push(i, (i + 1) % numSides, numSides);
+        indices.push((i + 1) % numSides, i, numSides);
+    }
+
+    return {
+        vertexPositions: vertices,
+        vertexNormals: normals,
+        vertexTextureCoords: texCoords,
+        indices: indices
+    };
+}
 
 
 /*  The display function, which draws the content of the canvas.
  */
+
+ 
 function draw() {
 
     var objectNumber = Number(document.getElementById("object").value);  // which object to draw.
@@ -96,6 +161,10 @@ function draw() {
     case 5:
 	glScalef(0.06, 0.06, 0.06);
 	drawModel(teapot);
+	break;
+    case 7:
+	glScalef(0.1, 0.1, 0.1);
+	drawModel(pyramid)
 	break;
     }
 
@@ -386,6 +455,7 @@ function init() {
     cone = uvCone();
     torus = uvTorus();
     teapot = teapotModel;  // (This one is just a variable, defined in teapot-model-IFS.js)
+    pyramid = drawPyramid();
     draw();
 }
 
@@ -412,6 +482,7 @@ function init() {
    <option value="4">Torus</option>
    <option value="5">Teapot</option>
    <option value="6">SHOW 2D SCENE</option>
+   <option value="7">PYRAMID</option>
 </select>
 <label><input type="checkbox" id="animate" style="margin-left:30px"><b>Animate</b></label></p>
 </div>
